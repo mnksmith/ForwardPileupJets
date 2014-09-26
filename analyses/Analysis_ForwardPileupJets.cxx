@@ -52,6 +52,19 @@ bool Analysis_ForwardPileupJets::ProcessEvent()
   //                  Set bool EventSelection for use in other (chained) analyses
   if( EventSelection() )       {Set("EventSelection", true );} 
   else                         {Set("EventSelection", false); return true;}
+ 
+  //Event Weighting
+  //
+  if      (Exists("PeriodAB_lumi")){
+    cout << "PeriodAB exists!" << endl;
+    Set("PUWeight", Float("PeriodAB_lumi"));
+  }
+  else if (Exists("Full_lumi")    ) Set("PUWeight", Float("Full_lumi"));
+  else                              Set("PUWeight", 0);
+  Set("EventWeight", (DefaultWeight() *  Float("PUWeight")));
+ 
+  AddGhostMatch("AntiKt4LCTopo", "clusterspt10", "clustersLCTopo",fastjet::antikt_algorithm, 0.4); 
+  AddGhostMatch("AntiKt4LCTopo", "clustersLCTopo", "clustersLCTopo",fastjet::antikt_algorithm, 0.4); 
   
   // Jet Collections: remove overlap between muons and jets 
   //                  this makes a vector of jets with name jetsAntiKt4LCTopoGood
@@ -68,7 +81,8 @@ bool Analysis_ForwardPileupJets::ProcessEvent()
   Fill(JetKeyA+"_NPV", Int("NPV"), Weight(), 100, 0., 100.);
   Fill(JetKeyA+"_mu", Float("averageIntPerXing"), Weight(), 100, 0., 100.); 
   MakeJetPlots(JetKey4LC,JetKey4Tru,JetKey4IT);
-  
+ 
+ 
   return true;
 }
 
@@ -110,7 +124,6 @@ void Analysis_ForwardPileupJets::MakeJetPlots(const MomKey JetKey1, const MomKey
       if(inDelRcut == 1){
         jet(iJet, JetKey1).Set("isPileup", 1);
         Add("jetsPileup", &(jet(iJet, JetKey1)));
-      
         for(int kJet=0; kJet < jets(JetKey3); kJet++){
           delRit = jet(iJet, JetKey1).p.DeltaR(jet(kJet, JetKey3).p);
           if(jet(kJet, JetKey3).p.Perp() > 15. && delRit < 0.4){          //criteria for a jet to be QCD pileup
@@ -136,8 +149,8 @@ void Analysis_ForwardPileupJets::MakeJetPlots(const MomKey JetKey1, const MomKey
     double sumPt2 = 0;
     double sumPt3 = 0;
     double sumPt4 = 0;
-    for(int iC = 0; iC < jet(iJet, JetKey1).Objs("constituents"); ++iC){
-      Particle *constituent = (Particle*) jet(iJet, JetKey1).Obj("constituents", iC);
+    for(int iC = 0; iC < jet(iJet, JetKey1).Objs("clustersLCTopoGhost"); ++iC){
+      Particle *constituent = (Particle*) jet(iJet, JetKey1).Obj("clustersLCTopoGhost", iC);
       delRClust = jet(iJet, JetKey1).p.DeltaR(constituent->p);
       sumNum = sumNum + pow(delRClust*constituent->p.Pt(), 2);
       sumDenom = sumDenom + pow(constituent->p.Pt(), 2);
@@ -156,7 +169,7 @@ void Analysis_ForwardPileupJets::MakeJetPlots(const MomKey JetKey1, const MomKey
       }
     }
 
-    if(jet(iJet, JetKey1).Objs("constituents")>0){
+    if(jet(iJet, JetKey1).Objs("clustersLCTopoGhost")>0){
       Fill(JetKeyS+"_allj_width", jet(iJet, JetKey1).Float("WIDTH"), Weight(), 100, 0., 1.);
       
       Fill(JetKeyS+"_allj_delRsqr", sumNum/sumDenom, Weight(), 100, 0., 0.5);
@@ -172,7 +185,7 @@ void Analysis_ForwardPileupJets::MakeJetPlots(const MomKey JetKey1, const MomKey
       jet(iJet, JetKey1).Set("delR_34", sumPt4/jet(iJet, JetKey1).p.Perp());
 
     }
-    if(jet(iJet, JetKey1).Objs("constituents")<=0){
+    if(jet(iJet, JetKey1).Objs("clustersLCTopoGhost")<=0){
       jet(iJet, JetKey1).Set("delRsqr", -1.);
       jet(iJet, JetKey1).Set("delR_01", -1.);
       jet(iJet, JetKey1).Set("delR_12", -1.);

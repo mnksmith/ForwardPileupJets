@@ -52,7 +52,8 @@ class Analysis_PUJetsTreeFiller : public Analysis_JetMET_Base {
   // per Event variables
   int   fTEventNumber;
   int   fTRunNumber;
-  float fTWeight;
+  float fTEventWeight;
+  float fTDefaultWeight;
   float fTMu;
   int   fTNPVtruth;
   int   fTNPV;

@@ -117,7 +117,8 @@ void Analysis_PUJetsTreeFiller::AddBranches(TTree *tree){
     // Event Info
     tree->Branch("EventNumber",               &fTEventNumber,            "EventNumber/I");
     tree->Branch("RunNumber",                 &fTRunNumber,              "RunNumber/I");
-    tree->Branch("Weight" ,                   &fTWeight,                 "Weight/F");
+    tree->Branch("EventWeight" ,              &fTEventWeight,            "EventWeight/F");
+    tree->Branch("DefaultWeight" ,            &fTDefaultWeight,          "DefaultWeight/F");
     tree->Branch("Mu" ,                       &fTMu,                     "Mu/F");
     tree->Branch("NPVtruth" ,                 &fTNPVtruth,               "NPVtruth/I");
     tree->Branch("NPV" ,                      &fTNPV,                    "NPV/I");
@@ -171,7 +172,8 @@ void Analysis_PUJetsTreeFiller::ResetBranches(TTree *tree){
     // Event Info
     fTEventNumber           = -999;
     fTRunNumber             = -999;
-    fTWeight                = -999;
+    fTEventWeight           = -999;
+    fTDefaultWeight         = -999;
     fTNPVtruth              = -999;
     fTNPV                   = -999;
     fTMu                    = -999;
@@ -229,7 +231,8 @@ void Analysis_PUJetsTreeFiller::FillEventVars(TTree *tree, const MomKey JetKey, 
     fTRunNumber                   = Int("RunNumber");
     fTNPVtruth                    = Exists("NPVTruth")? Int("NPVTruth"):-1;
     fTNPV                         = Exists("NPV")?      Int("NPV"):-1;
-    fTWeight                      = DefaultWeight();
+    fTEventWeight                 = Float("EventWeight");
+    fTDefaultWeight               = DefaultWeight();
     fTMu                          = Float("averageIntPerXing");                  
 
     // Jet Info ----------------------
@@ -254,8 +257,8 @@ void Analysis_PUJetsTreeFiller::FillEventVars(TTree *tree, const MomKey JetKey, 
     fTNumTowers     = myjet->Float("NumTowers");   
     fTTiming     = myjet->Float("Timing");
 
-    for(int iC=0; iC<myjet->Objs("constituents"); ++iC){
-	Particle *con = (Particle*) myjet->Obj("constituents",iC);
+    for(int iC=0; iC<myjet->Objs("clusterspt10Ghost"); ++iC){
+	Particle *con = (Particle*) myjet->Obj("clusterspt10Ghost",iC);
 	if(fTNClus == MaxNCluster) continue;
 	fTClusPt[iC] = con->p.Pt();
         fTClusEta[iC] = con->p.Eta();
